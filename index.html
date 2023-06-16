@@ -800,11 +800,11 @@
           .addEventListener("click", exportSummary);
 
         // status update interval
-        setInterval(setStatusTime, 500);
+        setInterval(setStatusTime, 1000);
 
         // clock config
         updateClock();
-        setInterval(updateClock, 500);
+        setInterval(updateClock, 1000);
 
         // saving config
         setInterval(saveToLocalStorage, 1000);
