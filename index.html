@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BrutalPatch | Brutalist CAD for engineers</title>
+    <meta
+      name="description"
+      content="Fast, custom, brutalist computer aided dispatch for a more civilized age."
+    />
+    <meta name="author" content="Jack Kingsman" />
+    <meta charset="UTF-8" />
+    <style type="text/css">
+      body {
+        margin: 0px 10px 0px 10px;
+        font-family: sans-serif;
+      }
+
+      h2 {
+        margin: 0;
+        display: inline;
+      }
+
+      .container {
+        display: grid;
+        grid-template-rows: min-content min-content 3fr min-content;
+        gap: 0px 0px;
+        grid-auto-flow: row;
+        grid-template-areas:
+          "title"
+          "teams"
+          "dispatch"
+          "footer";
+        width: 100%;
+        height: 100vh;
+        max-width: 100%;
+      }
+
+      .title {
+        grid-area: title;
+      }
+
+      .teams {
+        grid-area: teams;
+      }
+
+      .dispatch {
+        grid-area: dispatch;
+        margin-top: 0;
+      }
+
+      .footer {
+        grid-area: footer;
+        text-align: center;
+      }
+
+      .pageTitle {
+        display: inline;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      tbody tr {
+        border-bottom: 1px solid #dddddd;
+      }
+
+      tbody tr:nth-of-type(odd) {
+        background-color: #f3f3f3;
+      }
+
+      table td + td {
+        border-left: 1px solid #5f5f5f;
+      }
+
+      .stickyHeader {
+        position: sticky;
+        top: 0;
+        background: white;
+      }
+
+      .buttonContainer {
+        float: right;
+        margin-top: 10px;
+      }
+
+      .teamStatusTime {
+        color: gray;
+        font-style: oblique;
+      }
+
+      .scollLimited {
+        max-height: 150px;
+        overflow: auto;
+      }
+
+      .centeredButtons {
+        text-align: center;
+      }
+
+      .fullWidth {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="title">
+        <h1 class="pageTitle">BrutalPatch</h1>
+        <i id="clock"></i>
+        <input id="venue" placeholder="venue" />
+        <input id="show" placeholder="show" />
+        <input id="date" placeholder="date" />
+        <span class="buttonContainer">
+          <button id="clearPage">Clear Page</button>
+          <button id="exportSummary">Export Summary</button>
+        </span>
+        <hr />
+      </div>
+      <div class="teams">
+        <h2>Staff</h2>
+        <span class="buttonContainer">
+          <button id="addStaffTableRow">Add Row</button>
+          <button id="delStaffTableRow">Del Row</button>
+        </span>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 3%">#</th>
+              <th style="width: 10%">Post Location</th>
+              <th style="width: 10%">Status</th>
+              <th style="width: 5%">Call #</th>
+              <th style="width: 10%">Members</th>
+              <th style="width: 40%">Notes</th>
+              <th style="width: 22%"></th>
+            </tr>
+          </thead>
+          <tbody id="staffTableBody"></tbody>
+        </table>
+        <hr />
+      </div>
+      <div class="dispatch">
+        <h2>Calls</h2>
+        <span class="buttonContainer">
+          <button id="addCallTableRow">Add Row</button>
+          <button id="delCallTableRow">Del Row</button>
+        </span>
+        <table>
+          <thead class="stickyHeader">
+            <tr>
+              <th style="width: 10%">#</th>
+              <th style="width: 25%">Location</th>
+              <th style="width: 25%">Chief Complaint</th>
+              <th style="width: 25%">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="callTableBody"></tbody>
+        </table>
+      </div>
+      <div class="footer">
+        MIT Licensed Jack Kingsman &lt;jack.kingsman@gmail.com&gt;
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      function addStaffListRow(count = 1) {
+        const staffContainer = document.getElementById("staffTableBody");
+        let index = 0;
+        if (staffContainer.children.length > 0) {
+          index = staffContainer.children.length;
+        }
+
+        for (let i = index; i < index + count; i++) {
+          template = `
+              <tr id="team-${i}">
+                <td contenteditable="true" prevValue="" id="teamNumber-${i}"></td>
+                <td contenteditable="true" prevValue="" id="postLocation-${i}"></td>
+                <td>
+                  <select class="fullWidth" name="teamStatus" id="teamStatus-${i}" style="background-color: #ababab;">
+                    <option value="Out of service" style="background-color: #ababab;">Out of service</option>
+                    <option value="Posted" style="background-color: #7cffa4;">Posted</option>
+                    <option value="En Route" style="background-color: #f8ff90;">En Route</option>
+                    <option value="On Scene" style="background-color: #ffbebe;">On Scene</option>
+                    <option value="Bound for/in clinic" style="background-color: #acaaff;">Bound for/in clinic</option>
+                  </select>
+                  <span class="teamStatusTime" id="teamStatusTime-${i}"></span>
+                </td>
+                <td contenteditable="true" prevValue="" id="teamCallNumber-${i}"></td>
+                <td contenteditable="true" prevValue="" id="teamMembers-${i}"></td>
+                <td><div class="scollLimited" contenteditable="true" prevValue="" id="teamNotes-${i}"></div></td>
+                <td class="centeredButtons">
+                  <button onClick="setEnRouteToLatestCall(${i})">Assign Latest Call</button>
+                  <button title="No medical merit" onClick="clearCallAndMessage(${i}, 'No medical merit')">NMM</button>
+                  <button title="Unable to locate" onClick="clearCallAndMessage(${i}, 'Unable to locate')">UTL</button>
+                </td>
+              </tr>`;
+
+          staffContainer.insertAdjacentHTML("beforeend", template);
+        }
+      }
+
+      // we stupidly break this out because there's no way to remove anonymous event listeners.
+      // When we add new rows, we stack event listeners on top of each other but it all works out (IDK why)
+      // on every element except the select. So, name that handler to so we can peel it off.
+      function statusUpdateHandler(e) {
+        const row_id = e.target.id.split("-")[1];
+        const notesField = document.getElementById(`teamNotes-${row_id}`);
+
+        // set the time of setting
+        document
+          .getElementById(`teamStatusTime-${row_id}`)
+          .setAttribute("statusTime", Date.now());
+
+        const formattedMessage = `${getTime()} -- Status set to ${
+          e.target.value
+        }`;
+
+        switch (e.target.value) {
+          case "Out of service":
+            document.getElementById(
+              `teamStatus-${row_id}`
+            ).style.backgroundColor = "#ababab";
+            break;
+          case "Posted":
+            document.getElementById(
+              `teamStatus-${row_id}`
+            ).style.backgroundColor = "#7cffa4";
+            break;
+          case "En Route":
+            document.getElementById(
+              `teamStatus-${row_id}`
+            ).style.backgroundColor = "#f8ff90";
+            break;
+          case "On Scene":
+            document.getElementById(
+              `teamStatus-${row_id}`
+            ).style.backgroundColor = "#ffbebe";
+            break;
+          case "Bound for/in clinic":
+            document.getElementById(
+              `teamStatus-${row_id}`
+            ).style.backgroundColor = "#acaaff";
+            break;
+        }
+
+        appendToNotesField(notesField, formattedMessage);
+
+        // clear all `selected` and set it on the right one
+        // so that when we dehydrate the HTML for storage,
+        // we come back up with the right one selected
+        for (child of e.target.children) {
+          if (child.value !== e.target.value) {
+            child.removeAttribute("selected");
+          } else {
+            child.setAttribute("selected", true);
+          }
+        }
+
+        // if we're assigned to a call, update the status there too
+        const team_id = document.getElementById(
+          `teamNumber-${row_id}`
+        ).innerText;
+        const associatedCallNumber = document.getElementById(
+          `teamCallNumber-${row_id}`
+        ).innerText;
+        if (associatedCallNumber.length > 0) {
+          const callNotesField = document.getElementById(
+            `callNotes-${associatedCallNumber}`
+          );
+
+          const formattedMessage = `${getTime()} -- Team ${team_id} status set to ${
+            e.target.value
+          }`;
+
+          appendToNotesField(callNotesField, formattedMessage);
+        }
+      }
+
+      // show all the times in given status
+      function setStatusTime() {
+        for (statusTimeField of document.querySelectorAll(
+          '[id^="teamStatusTime-"]'
+        )) {
+          const timeStatusSet = statusTimeField.getAttribute("statusTime");
+          if (timeStatusSet) {
+            const secondsPassed = Math.floor(
+              (Date.now() - Number(timeStatusSet)) / 1000
+            );
+            const formattedMinutes = Math.floor(secondsPassed / 60);
+            const formattedSeconds = secondsPassed - formattedMinutes * 60;
+
+            statusTimeField.innerText = `${String(formattedMinutes).padStart(
+              2,
+              "0"
+            )}:${String(formattedSeconds).padStart(2, "0")}`;
+          }
+        }
+      }
+
+      function registerStaffListListeners() {
+        for (postLocationField of document.querySelectorAll(
+          '[id^="postLocation-"]'
+        )) {
+          postLocationField.addEventListener("focusout", (e) => {
+            literalActionAnnotator(
+              e.target,
+              "Posted to",
+              "Posting cleared",
+              "teamNotes"
+            );
+          });
+        }
+
+        for (teamMembersField of document.querySelectorAll(
+          '[id^="teamMembers-"]'
+        )) {
+          teamMembersField.addEventListener("focusout", (e) => {
+            literalActionAnnotator(
+              e.target,
+              "Team members set to",
+              "Team emptied",
+              "teamNotes"
+            );
+          });
+        }
+
+        for (teamCallField of document.querySelectorAll(
+          '[id^="teamCallNumber-"]'
+        )) {
+          teamCallField.addEventListener("focusout", (e) => {
+            const didWrite = literalActionAnnotator(
+              e.target,
+              "Attached to call",
+              "Detached from call",
+              "teamNotes"
+            );
+
+            // only append to call if we decided this was novel
+            if (didWrite) {
+              const row_id = e.target.id.split("-")[1];
+              const team_id = document.getElementById(
+                `teamNumber-${row_id}`
+              ).innerText;
+
+              if (e.target.innerText.length > 0) {
+                // we added a value; annotate it in the call record
+                const callNotesField = document.getElementById(
+                  `callNotes-${e.target.innerText}`
+                );
+                const formattedMessage = `${getTime()} -- Team ${team_id} attached`;
+
+                appendToNotesField(callNotesField, formattedMessage);
+              } else {
+                // we cleared a record
+                // we added a value; annotate it in the call record
+                const callNotesField = document.getElementById(
+                  `callNotes-${e.target.getAttribute("lastActiveValue")}`
+                );
+
+                const formattedMessage = `${getTime()} -- Team ${team_id} detached`;
+
+                appendToNotesField(callNotesField, formattedMessage);
+              }
+            }
+          });
+        }
+
+        for (statusField of document.querySelectorAll('[id^="teamStatus-"]')) {
+          statusField.removeEventListener("change", statusUpdateHandler);
+          statusField.addEventListener("change", statusUpdateHandler);
+        }
+
+        // on newline, add a time prefix
+        for (notesField of document.querySelectorAll('[id^="teamNotes-"]')) {
+          notesField.addEventListener("keyup", (e) => {
+            if (e.keyCode == 13) {
+              appendToNotesField(
+                e.target,
+                `${getTime()}&nbsp--&nbsp`,
+                false,
+                true
+              );
+            }
+          });
+
+          notesField.addEventListener("focus", (e) => {
+            setEndOfContenteditable(e.target);
+          });
+        }
+      }
+
+      // find the last empty location, go one less, and assign the given team to that call + mark them en route
+      function setEnRouteToLatestCall(teamID) {
+        const firstEmptyCall = Array.from(
+          document.querySelectorAll('[id^="callLocation-"]')
+        ).find((el) => el.textContent === "");
+        const firstEmptyCallId = firstEmptyCall.id.split("-")[1];
+        const lastFilledInCallId = Math.max(firstEmptyCallId - 1, 0);
+
+        document.getElementById(`teamCallNumber-${teamID}`).innerText =
+          lastFilledInCallId;
+        document
+          .getElementById(`teamCallNumber-${teamID}`)
+          .dispatchEvent(new Event("focusout"));
+
+        document.getElementById(`teamStatus-${teamID}`).value = "En Route";
+        document
+          .getElementById(`teamStatus-${teamID}`)
+          .dispatchEvent(new Event("change"));
+      }
+
+      function clearCallAndMessage(teamID, message) {
+        const callID = document.getElementById(
+          `teamCallNumber-${teamID}`
+        ).innerText;
+        const notesField = document.getElementById(`callNotes-${callID}`);
+        console.log(notesField);
+        notesField.innerText =
+          // strip newlines at beginning or end
+          `${notesField.innerText}\n${getTime()} -- Team ${
+            document.getElementById(`teamNumber-${teamID}`).innerText
+          } states ${message}`;
+
+        document.getElementById(`teamCallNumber-${teamID}`).innerText = "";
+        document
+          .getElementById(`teamCallNumber-${teamID}`)
+          .dispatchEvent(new Event("focusout"));
+
+        document.getElementById(`teamStatus-${teamID}`).value = "Posted";
+        document
+          .getElementById(`teamStatus-${teamID}`)
+          .dispatchEvent(new Event("change"));
+      }
+
+      function addCallListRow(count = 1) {
+        const callContainer = document.getElementById("callTableBody");
+        let index = 0;
+        if (callContainer.children.length > 0) {
+          // this is not our first row; pick up indexing
+          index = callContainer.children.length;
+        }
+
+        for (let i = index; i < index + count; i++) {
+          template = `
+              <tr id="call-${i}">
+                <td id="callNumber-${i}">${i}</td>
+                <td contenteditable="true" prevValue="" id="callLocation-${i}"></td>
+                <td contenteditable="true" prevValue="" id="chiefComplaint-${i}"></td>
+                <td contenteditable="true" prevValue="" id="callNotes-${i}"></td>
+              </tr>`;
+
+          callContainer.insertAdjacentHTML("beforeend", template);
+        }
+      }
+
+      function registerCallListListeners() {
+        for (locationField of document.querySelectorAll(
+          '[id^="callLocation-"]'
+        )) {
+          locationField.addEventListener("focusout", (e) => {
+            literalActionAnnotator(
+              e.target,
+              "Location set to",
+              "Location cleared",
+              "callNotes"
+            );
+          });
+        }
+
+        for (chiefComplaintField of document.querySelectorAll(
+          '[id^="chiefComplaint-"]'
+        )) {
+          chiefComplaintField.addEventListener("focusout", (e) => {
+            literalActionAnnotator(
+              e.target,
+              "Complaint set to",
+              "Complaint cleared",
+              "callNotes"
+            );
+          });
+        }
+
+        for (notesField of document.querySelectorAll('[id^="callNotes-"]')) {
+          notesField.addEventListener("keyup", (e) => {
+            if (e.keyCode == 13) {
+              appendToNotesField(
+                e.target,
+                `${getTime()}&nbsp--&nbsp`,
+                false,
+                true
+              );
+            }
+          });
+
+          notesField.addEventListener("focus", (e) => {
+            setEndOfContenteditable(e.target);
+          });
+        }
+      }
+
+      // extract the text from the targeted element, wrap it in the message, and inject it in the notesTarget
+      // returns true if it was written
+      function literalActionAnnotator(
+        targetField,
+        message,
+        clearedMessage,
+        notesTarget
+      ) {
+        const id = targetField.id.split("-")[1];
+        const notesField = document.getElementById(`${notesTarget}-${id}`);
+
+        const lastValue = targetField.getAttribute("prevValue");
+
+        // default to regular message
+        let formattedMessage = `${getTime()} -- ${message} ${
+          targetField.innerHTML
+        }`;
+
+        // special case for emptying
+        if (targetField.innerText.length == 0) {
+          formattedMessage = `${getTime()} -- ${clearedMessage}`;
+
+          // if we're clearing it, retain what it was so we can use it after clearing
+          targetField.setAttribute("lastActiveValue", lastValue);
+        }
+
+        // don't dupe the message
+        if (targetField.innerText !== lastValue) {
+          appendToNotesField(notesField, formattedMessage);
+          targetField.setAttribute("prevValue", targetField.innerText);
+          return true;
+        }
+
+        return false;
+      }
+
+      function appendToNotesField(
+        field,
+        text,
+        useInnerText = true,
+        jumpToEnd = false
+      ) {
+        // strip newlines from incoming
+
+        if (useInnerText) {
+          text = text.replace(/\n/g, " ");
+          text = text.replace(/<br><br>/g, " ");
+          field.innerText = `${field.innerText}\n${text}`;
+
+          // strip whitespace from beginning or end
+          field.innerText = field.innerText.replace(/^\s+|\s+$/g, "");
+        } else {
+          field.innerHTML = `${field.innerHTML}<br>${text}`;
+          // strip whitespace from beginning only as we might be appending a spave
+          field.innerText = field.innerText.replace(/^\s+/g, "");
+        }
+
+        field.innerText = field.innerText.replace(/\n+/gm, "\n");
+
+        // scroll to bottom
+        field.scrollTo(0, field.scrollHeight);
+
+        if (jumpToEnd) {
+          setEndOfContenteditable(field);
+        }
+      }
+
+      function getTime(includeSeconds = false) {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        let seconds = now.getSeconds();
+
+        if (hours < 10) hours = "0" + hours;
+        if (minutes < 10) minutes = "0" + minutes;
+        if (seconds < 10) seconds = "0" + seconds;
+
+        if (includeSeconds) {
+          return `${hours}${minutes}:${seconds}`;
+        } else {
+          return `${hours}${minutes}`;
+        }
+      }
+
+      function updateClock() {
+        const clock = document.getElementById("clock");
+        clock.innerText = getTime(true);
+      }
+
+      function setEndOfContenteditable(contentEditableElement) {
+        var range, selection;
+        if (document.createRange) {
+          //Firefox, Chrome, Opera, Safari, IE 9+
+          range = document.createRange(); //Create a range (a range is a like the selection but invisible)
+          range.selectNodeContents(contentEditableElement); //Select the entire contents of the element with the range
+          range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
+          selection = window.getSelection(); //get the selection object (allows you to change selection)
+          selection.removeAllRanges(); //remove any selections already made
+          selection.addRange(range); //make the range you have just created the visible selection
+        } else if (document.selection) {
+          //IE 8 and lower
+          range = document.body.createTextRange(); //Create a range (a range is a like the selection but invisible)
+          range.moveToElementText(contentEditableElement); //Select the entire contents of the element with the range
+          range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
+          range.select(); //Select the range (make it the visible selection
+        }
+      }
+
+      function saveToLocalStorage() {
+        localStorage.setItem(
+          "staffTableBody",
+          document.getElementById("staffTableBody").innerHTML
+        );
+        localStorage.setItem(
+          "callTableBody",
+          document.getElementById("callTableBody").innerHTML
+        );
+
+        localStorage.setItem("venue", document.getElementById("venue").value);
+        localStorage.setItem("show", document.getElementById("show").value);
+        localStorage.setItem("date", document.getElementById("date").value);
+      }
+
+      function generateCallSummary() {
+        const callContainer = document.getElementById("callTableBody");
+        let summary = `BEGIN CALL REPORT\n\n`;
+
+        for (i = 0; i < callContainer.children.length; i++) {
+          const callLocation = document.getElementById(
+            `callLocation-${i}`
+          ).innerText;
+
+          // only export things with locations so we don't dump an empty list
+          if (callLocation.length > 0) {
+            const callNumber = document.getElementById(
+              `callNumber-${i}`
+            ).innerText;
+            summary += `= = = = Begin Call ${callNumber} = = = =\n`;
+            // split lines, tab indent each, and recombine
+            summary += document
+              .getElementById(`callNotes-${i}`)
+              .innerText.split("\n")
+              .map((line) => `\t${line}`)
+              .join("\n");
+            summary += `\n= = = = End Call ${callNumber} = = = =\n\n`;
+          }
+        }
+
+        summary += "END CALL REPORT\n\n";
+        return summary;
+      }
+
+      function generateStaffSummary() {
+        const staffContainer = document.getElementById("staffTableBody");
+        let summary = `BEGIN TEAM REPORT\n\n`;
+
+        for (i = 0; i < staffContainer.children.length; i++) {
+          const teamNumber = document.getElementById(
+            `teamNumber-${i}`
+          ).innerText;
+
+          // only export teams with a number so we don't export an empty list
+          if (teamNumber.length > 0) {
+            summary += `= = = = Begin Team ${teamNumber} = = = =\n`;
+            summary += `Team Members: ${
+              document.getElementById(`teamMembers-${i}`).innerText
+            }\n`;
+            // split lines, tab indent each, and recombine
+            summary += `Team Log:\n${document
+              .getElementById(`teamNotes-${i}`)
+              .innerText.split("\n")
+              .map((line) => `\t${line}`)
+              .join("\n")}\n`;
+            summary += `= = = = End of summary for Team ${teamNumber} = = = =\n\n`;
+          }
+        }
+
+        summary += "END TEAM REPORT\n\n";
+        return summary;
+      }
+
+      function downloadText(content, filename) {
+        const file = new File([content], filename, {
+          type: "text/plain",
+        });
+
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(file);
+
+        link.href = url;
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+
+      function exportSummary() {
+        let preamble = `Show: ${document.getElementById("show").value}\n`;
+        preamble += `Venue: ${document.getElementById("venue").value}\n`;
+        preamble += `Date: ${document.getElementById("date").value}\n`;
+        preamble += `Report Generation Date: ${new Date().toLocaleString("sv", {
+          timeZoneName: "short",
+        })}\n\n\n`;
+        downloadText(
+          preamble + generateCallSummary() + generateStaffSummary(),
+          "Summary Report.txt"
+        );
+      }
+
+      function autorun() {
+        // fill staff list from storage or generate
+        const staffContainer = document.getElementById("staffTableBody");
+        if (localStorage.getItem("staffTableBody")) {
+          staffContainer.innerHTML = localStorage.getItem("staffTableBody");
+        } else {
+          addStaffListRow(4);
+        }
+        registerStaffListListeners();
+
+        // fill calls from storage or generate
+        const callContainer = document.getElementById("callTableBody");
+        if (localStorage.getItem("callTableBody")) {
+          callContainer.innerHTML = localStorage.getItem("callTableBody");
+        } else {
+          addCallListRow(10);
+        }
+        registerCallListListeners();
+
+        // fill in venue/show/date if we have it
+        if (localStorage.getItem("venue")) {
+          document.getElementById("venue").value =
+            localStorage.getItem("venue");
+        }
+
+        if (localStorage.getItem("show")) {
+          document.getElementById("show").value = localStorage.getItem("show");
+        }
+
+        if (localStorage.getItem("date")) {
+          document.getElementById("date").value = localStorage.getItem("date");
+        } else {
+          document.getElementById("date").value = new Date()
+            .toLocaleString("sv", {
+              timeZoneName: "short",
+            })
+            .split(" ")[0];
+        }
+
+        // register row buttons
+        document
+          .getElementById("addStaffTableRow")
+          .addEventListener("click", () => {
+            addStaffListRow();
+            registerStaffListListeners();
+          });
+        document
+          .getElementById("addCallTableRow")
+          .addEventListener("click", () => {
+            addCallListRow();
+            registerCallListListeners();
+          });
+        document
+          .getElementById("delStaffTableRow")
+          .addEventListener("click", () => {
+            const staffTable = document.getElementById("staffTableBody");
+
+            let lastChild = staffTable.lastChild;
+            staffTable.removeChild(lastChild);
+
+            lastChild = staffTable.lastChild;
+            staffTable.removeChild(lastChild);
+          });
+        document
+          .getElementById("delCallTableRow")
+          .addEventListener("click", () => {
+            const callTable = document.getElementById("callTableBody");
+
+            // dunno why we have to call this twice but it thinks the last child is an empty string after we kill a row
+            let lastChild = callTable.lastChild;
+            callTable.removeChild(lastChild);
+
+            lastChild = callTable.lastChild;
+            callTable.removeChild(lastChild);
+          });
+
+        // register clear button and force download before we do
+        document.getElementById("clearPage").addEventListener("click", () => {
+          exportSummary();
+
+          localStorage.setItem("staffTableBody", "");
+          localStorage.setItem("callTableBody", "");
+
+          localStorage.setItem("venue", "");
+          localStorage.setItem("show", "");
+          localStorage.setItem("date", "");
+          location.reload();
+        });
+
+        document
+          .getElementById("exportSummary")
+          .addEventListener("click", exportSummary);
+
+        // status update interval
+        setInterval(setStatusTime, 500);
+
+        // clock config
+        updateClock();
+        setInterval(updateClock, 500);
+
+        // saving config
+        setInterval(saveToLocalStorage, 1000);
+      }
+
+      if (document.addEventListener)
+        document.addEventListener("DOMContentLoaded", autorun, false);
+      else window.onload = autorun;
+    </script>
+  </body>
+</html>
