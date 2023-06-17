@@ -90,8 +90,8 @@
         font-style: oblique;
       }
 
-      .scollLimited {
-        max-height: 150px;
+      .scrollLimited {
+        max-height: 70px;
         overflow: auto;
       }
 
@@ -184,7 +184,7 @@
                 </td>
                 <td contenteditable="true" prevValue="" id="teamCallNumber-${i}"></td>
                 <td contenteditable="true" prevValue="" id="teamMembers-${i}"></td>
-                <td><div class="scollLimited" contenteditable="true" prevValue="" id="teamNotes-${i}"></div></td>
+                <td><div class="scrollLimited" contenteditable="true" prevValue="" id="teamNotes-${i}"></div></td>
                 <td class="centeredButtons">
                   <button onClick="setEnRouteToLatestCall(${i})">Assign Latest Call</button>
                   <button title="No medical merit" onClick="clearCallAndMessage(${i}, 'No medical merit')">NMM</button>
