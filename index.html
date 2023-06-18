@@ -133,11 +133,11 @@
             <tr>
               <th style="width: 3%">#</th>
               <th style="width: 10%">Post Location</th>
-              <th style="width: 18%">Status</th>
-              <th style="width: 5%">Call #</th>
-              <th style="width: 10%">Members</th>
-              <th style="width: 32%">Notes</th>
-              <th style="width: 22%"></th>
+              <th style="width: 13%">Status</th>
+              <th style="width: 3%">Call #</th>
+              <th style="width: 15%">Members</th>
+              <th style="width: 30%">Notes</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="staffTableBody"></tbody>
@@ -562,10 +562,7 @@
         const lastValue = targetField.getAttribute("prevValue");
 
         // default to regular message
-        let formattedMessage = `${getTime()} -- ${message} ${targetField.innerHTML.replace(
-          /<br>/g,
-          " "
-        )}`;
+        let formattedMessage = `${getTime()} -- ${message} ${targetField.innerText.replace(/\n/g, " ").replace(/^\s+|\s+$/g, "")}`;
 
         // special case for emptying
         if (targetField.innerText.length == 0) {
