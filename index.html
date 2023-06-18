@@ -711,6 +711,8 @@
         const staffContainer = document.getElementById("staffTableBody");
         if (localStorage.getItem("staffTableBody")) {
           staffContainer.innerHTML = localStorage.getItem("staffTableBody");
+          // scroll to bottom of all notes fields
+          Array.from(document.querySelectorAll('[id^="teamNotes-"]')).map((notesField) => notesField.scrollTo(0, notesField.scrollHeight));
         } else {
           addStaffListRow(4);
         }
@@ -720,6 +722,8 @@
         const callContainer = document.getElementById("callTableBody");
         if (localStorage.getItem("callTableBody")) {
           callContainer.innerHTML = localStorage.getItem("callTableBody");
+          // scroll to bottom of all notes fields
+          Array.from(document.querySelectorAll('[id^="callNotes-"]')).map((notesField) => notesField.scrollTo(0, notesField.scrollHeight));
         } else {
           addCallListRow(10);
         }
