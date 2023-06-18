@@ -103,6 +103,10 @@
       .centeredButtons {
         text-align: center;
       }
+
+      .emphasizeRow {
+        outline: 2px solid red;
+      }
     </style>
   </head>
   <body>
@@ -329,6 +333,9 @@
         for (teamCallField of document.querySelectorAll(
           '[id^="teamCallNumber-"]'
         )) {
+          teamCallField.addEventListener('mouseenter', handleMouseHoverOverCallNumber);
+          teamCallField.addEventListener('mouseleave', handleMouseHoverOverCallNumber);
+
           teamCallField.addEventListener("focusout", (e) => {
             const didWrite = literalActionAnnotator(
               e.target,
@@ -388,6 +395,19 @@
           notesField.addEventListener("focus", (e) => {
             setEndOfContenteditable(e.target);
           });
+        }
+      }
+
+      function handleMouseHoverOverCallNumber(e) {
+        const callNumber = e.target.innerText;
+        if (!callNumber) {
+          return;
+        }
+
+        if (e.type == 'mouseenter') {
+          document.getElementById(`call-${callNumber}`).classList.add('emphasizeRow');
+        } else {
+          document.getElementById(`call-${callNumber}`).classList.remove('emphasizeRow');
         }
       }
 
