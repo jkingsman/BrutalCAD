@@ -299,12 +299,19 @@
           '[id^="postLocation-"]'
         )) {
           postLocationField.addEventListener("focusout", (e) => {
-            literalActionAnnotator(
+            const didUpdate = literalActionAnnotator(
               e.target,
               "Posted to",
               "Posting cleared",
               "teamNotes"
             );
+
+            if (didUpdate) {
+              const row_id = e.target.id.split("-")[1];
+              document
+                .getElementById(`teamStatusTime-${row_id}`)
+                .setAttribute("statusTime", Date.now());
+            }
           });
         }
 
