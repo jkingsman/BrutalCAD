@@ -510,7 +510,7 @@
 
         // default to regular message
         let formattedMessage = `${getTime()} -- ${message} ${
-          targetField.innerHTML
+          targetField.innerHTML.replace(/<br>/g, " ")
         }`;
 
         // special case for emptying
