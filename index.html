@@ -112,8 +112,7 @@
   <body>
     <div class="container">
       <div class="title">
-        <h1 class="pageTitle">BrutalPatch</h1>
-        <i id="clock"></i>
+        <h1 class="pageTitle" title="Brutalist CAD for engineers">BrutalPatch | <i id="clock"></i> |&nbsp;&nbsp;</h1>
         <input id="venue" placeholder="venue" />
         <input id="show" placeholder="show" />
         <input id="date" placeholder="date" />
@@ -202,8 +201,8 @@
                   <button title="No medical merit" onClick="setStatAndMessage(${i}, 'No medical merit', 'Posted', true)">NMM</button>
                   <button title="Unable to locate" onClick="setStatAndMessage(${i}, 'Unable to locate', 'Posted', true)">UTL</button>
                   <button title="En route to clinic" onClick="setStatAndMessage(${i}, 'En route to clinic', 'Clinic Incoming', false)">To Clinic</button>
-                  <button title="Pt dropped off" onClick="setStatAndMessage(${i}, 'Pt dropped off', 'Out of service (clinic)', false)">Drop Off</button>
-                  <button title="Detach + Post" onClick="setStatAndMessage(${i}, 'Detached', 'Posted', true)">Detach + Post</button>
+                  <button title="Patient dropped off" onClick="setStatAndMessage(${i}, 'Pt dropped off', 'Out of service (clinic)', false)">Drop Off</button>
+                  <button title="Detach from current call and mark as posted" onClick="setStatAndMessage(${i}, 'Detached', 'Posted', true)">Detach + Post</button>
                 </td>
               </tr>`;
 
@@ -228,19 +227,18 @@
         }`;
 
         const statusColors = {
-          'Out of service (clinic)': '#ababab',
-          'Out of service (break)': '#ababab',
-          'Posted': '#7cffa4',
-          'En Route (call)': '#f8ff90',
-          'En Route (repost)': '#f8ff90',
-          'En Route (resource)': '#f8ff90',
-          'On Scene': '#ffbebe',
-          'Clinic Incoming': '#acaaff',
+          "Out of service (clinic)": "#ababab",
+          "Out of service (break)": "#ababab",
+          Posted: "#7cffa4",
+          "En Route (call)": "#f8ff90",
+          "En Route (repost)": "#f8ff90",
+          "En Route (resource)": "#f8ff90",
+          "On Scene": "#ffbebe",
+          "Clinic Incoming": "#acaaff",
         };
 
-        document.getElementById(
-              `teamStatus-${row_id}`
-            ).style.backgroundColor = statusColors[e.target.value];
+        document.getElementById(`teamStatus-${row_id}`).style.backgroundColor =
+          statusColors[e.target.value];
 
         appendToNotesField(notesField, formattedMessage);
 
@@ -333,8 +331,14 @@
         for (teamCallField of document.querySelectorAll(
           '[id^="teamCallNumber-"]'
         )) {
-          teamCallField.addEventListener('mouseenter', handleMouseHoverOverCallNumber);
-          teamCallField.addEventListener('mouseleave', handleMouseHoverOverCallNumber);
+          teamCallField.addEventListener(
+            "mouseenter",
+            handleMouseHoverOverCallNumber
+          );
+          teamCallField.addEventListener(
+            "mouseleave",
+            handleMouseHoverOverCallNumber
+          );
 
           teamCallField.addEventListener("focusout", (e) => {
             const didWrite = literalActionAnnotator(
@@ -404,10 +408,14 @@
           return;
         }
 
-        if (e.type == 'mouseenter') {
-          document.getElementById(`call-${callNumber}`).classList.add('emphasizeRow');
+        if (e.type == "mouseenter") {
+          document
+            .getElementById(`call-${callNumber}`)
+            .classList.add("emphasizeRow");
         } else {
-          document.getElementById(`call-${callNumber}`).classList.remove('emphasizeRow');
+          document
+            .getElementById(`call-${callNumber}`)
+            .classList.remove("emphasizeRow");
         }
       }
 
@@ -425,7 +433,8 @@
           .getElementById(`teamCallNumber-${teamID}`)
           .dispatchEvent(new Event("focusout"));
 
-        document.getElementById(`teamStatus-${teamID}`).value = "En Route (call)";
+        document.getElementById(`teamStatus-${teamID}`).value =
+          "En Route (call)";
         document
           .getElementById(`teamStatus-${teamID}`)
           .dispatchEvent(new Event("change"));
@@ -446,8 +455,8 @@
         if (releaseCall) {
           document.getElementById(`teamCallNumber-${teamID}`).innerText = "";
           document
-          .getElementById(`teamCallNumber-${teamID}`)
-          .dispatchEvent(new Event("focusout"));
+            .getElementById(`teamCallNumber-${teamID}`)
+            .dispatchEvent(new Event("focusout"));
         }
 
         document.getElementById(`teamStatus-${teamID}`).value = status;
@@ -478,9 +487,13 @@
       }
 
       function addCallListRowIfOutOfRoom() {
-        console.log('invoked')
-        const emptyLocationRows = Array.from(document.querySelectorAll('[id^="callLocation-"]')).filter((element) => element.innerHTML.length == 0);
-        const emptyChiefComplaintRows = Array.from(document.querySelectorAll('[id^="chiefComplaint-"]')).filter((element) => element.innerHTML.length == 0);
+        console.log("invoked");
+        const emptyLocationRows = Array.from(
+          document.querySelectorAll('[id^="callLocation-"]')
+        ).filter((element) => element.innerHTML.length == 0);
+        const emptyChiefComplaintRows = Array.from(
+          document.querySelectorAll('[id^="chiefComplaint-"]')
+        ).filter((element) => element.innerHTML.length == 0);
 
         if (emptyLocationRows == 0 || emptyChiefComplaintRows == 0) {
           addCallListRow();
@@ -549,9 +562,10 @@
         const lastValue = targetField.getAttribute("prevValue");
 
         // default to regular message
-        let formattedMessage = `${getTime()} -- ${message} ${
-          targetField.innerHTML.replace(/<br>/g, " ")
-        }`;
+        let formattedMessage = `${getTime()} -- ${message} ${targetField.innerHTML.replace(
+          /<br>/g,
+          " "
+        )}`;
 
         // special case for emptying
         if (targetField.innerText.length == 0) {
@@ -752,7 +766,9 @@
         if (localStorage.getItem("staffTableBody")) {
           staffContainer.innerHTML = localStorage.getItem("staffTableBody");
           // scroll to bottom of all notes fields
-          Array.from(document.querySelectorAll('[id^="teamNotes-"]')).map((notesField) => notesField.scrollTo(0, notesField.scrollHeight));
+          Array.from(document.querySelectorAll('[id^="teamNotes-"]')).map(
+            (notesField) => notesField.scrollTo(0, notesField.scrollHeight)
+          );
         } else {
           addStaffListRow(4);
         }
@@ -763,7 +779,9 @@
         if (localStorage.getItem("callTableBody")) {
           callContainer.innerHTML = localStorage.getItem("callTableBody");
           // scroll to bottom of all notes fields
-          Array.from(document.querySelectorAll('[id^="callNotes-"]')).map((notesField) => notesField.scrollTo(0, notesField.scrollHeight));
+          Array.from(document.querySelectorAll('[id^="callNotes-"]')).map(
+            (notesField) => notesField.scrollTo(0, notesField.scrollHeight)
+          );
         } else {
           addCallListRow(1);
         }
