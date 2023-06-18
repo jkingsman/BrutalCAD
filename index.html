@@ -95,6 +95,11 @@
         overflow: auto;
       }
 
+      .scrollLimitedLarge {
+        max-height: 140px;
+        overflow: auto;
+      }
+
       .centeredButtons {
         text-align: center;
       }
@@ -125,10 +130,10 @@
             <tr>
               <th style="width: 3%">#</th>
               <th style="width: 10%">Post Location</th>
-              <th style="width: 10%">Status</th>
+              <th style="width: 18%">Status</th>
               <th style="width: 5%">Call #</th>
               <th style="width: 10%">Members</th>
-              <th style="width: 40%">Notes</th>
+              <th style="width: 32%">Notes</th>
               <th style="width: 22%"></th>
             </tr>
           </thead>
@@ -174,11 +179,14 @@
                 <td contenteditable="true" prevValue="" id="postLocation-${i}"></td>
                 <td>
                   <select name="teamStatus" id="teamStatus-${i}" style="background-color: #ababab;">
-                    <option value="Out of service" style="background-color: #ababab;">Out of service</option>
+                    <option value="Out of service (clinic)" style="background-color: #ababab;">Out of service (clinic)</option>
+                    <option value="Out of service (break)" style="background-color: #ababab;">Out of service (break)</option>
                     <option value="Posted" style="background-color: #7cffa4;">Posted</option>
-                    <option value="En Route" style="background-color: #f8ff90;">En Route</option>
+                    <option value="En Route (call)" style="background-color: #f8ff90;">En Route (call)</option>
+                    <option value="En Route (repost)" style="background-color: #f8ff90;">En Route (repost)</option>
+                    <option value="En Route (resource)" style="background-color: #f8ff90;">En Route (resource)</option>
                     <option value="On Scene" style="background-color: #ffbebe;">On Scene</option>
-                    <option value="Bound for/in clinic" style="background-color: #acaaff;">Bound for/in clinic</option>
+                    <option value="Clinic Incoming" style="background-color: #acaaff;">Clinic Incoming</option>
                   </select>
                   <span class="teamStatusTime" id="teamStatusTime-${i}"></span>
                 </td>
@@ -186,9 +194,12 @@
                 <td contenteditable="true" prevValue="" id="teamMembers-${i}"></td>
                 <td><div class="scrollLimited" contenteditable="true" prevValue="" id="teamNotes-${i}"></div></td>
                 <td class="centeredButtons">
-                  <button onClick="setEnRouteToLatestCall(${i})">Assign Latest Call</button>
-                  <button title="No medical merit" onClick="clearCallAndMessage(${i}, 'No medical merit')">NMM</button>
-                  <button title="Unable to locate" onClick="clearCallAndMessage(${i}, 'Unable to locate')">UTL</button>
+                  <button onClick="setEnRouteToLatestCall(${i})">Assign Latest</button>
+                  <button title="No medical merit" onClick="setStatAndMessage(${i}, 'No medical merit', 'Posted', true)">NMM</button>
+                  <button title="Unable to locate" onClick="setStatAndMessage(${i}, 'Unable to locate', 'Posted', true)">UTL</button>
+                  <button title="En route to clinic" onClick="setStatAndMessage(${i}, 'En route to clinic', 'Clinic Incoming', false)">To Clinic</button>
+                  <button title="Pt dropped off" onClick="setStatAndMessage(${i}, 'Pt dropped off', 'Out of service (clinic)', false)">Drop Off</button>
+                  <button title="Detach + Post" onClick="setStatAndMessage(${i}, 'Detached', 'Posted', true)">Detach + Post</button>
                 </td>
               </tr>`;
 
@@ -212,33 +223,20 @@
           e.target.value
         }`;
 
-        switch (e.target.value) {
-          case "Out of service":
-            document.getElementById(
+        const statusColors = {
+          'Out of service (clinic)': '#ababab',
+          'Out of service (break)': '#ababab',
+          'Posted': '#7cffa4',
+          'En Route (call)': '#f8ff90',
+          'En Route (repost)': '#f8ff90',
+          'En Route (resource)': '#f8ff90',
+          'On Scene': '#ffbebe',
+          'Clinic Incoming': '#acaaff',
+        };
+
+        document.getElementById(
               `teamStatus-${row_id}`
-            ).style.backgroundColor = "#ababab";
-            break;
-          case "Posted":
-            document.getElementById(
-              `teamStatus-${row_id}`
-            ).style.backgroundColor = "#7cffa4";
-            break;
-          case "En Route":
-            document.getElementById(
-              `teamStatus-${row_id}`
-            ).style.backgroundColor = "#f8ff90";
-            break;
-          case "On Scene":
-            document.getElementById(
-              `teamStatus-${row_id}`
-            ).style.backgroundColor = "#ffbebe";
-            break;
-          case "Bound for/in clinic":
-            document.getElementById(
-              `teamStatus-${row_id}`
-            ).style.backgroundColor = "#acaaff";
-            break;
-        }
+            ).style.backgroundColor = statusColors[e.target.value];
 
         appendToNotesField(notesField, formattedMessage);
 
@@ -407,30 +405,32 @@
           .getElementById(`teamCallNumber-${teamID}`)
           .dispatchEvent(new Event("focusout"));
 
-        document.getElementById(`teamStatus-${teamID}`).value = "En Route";
+        document.getElementById(`teamStatus-${teamID}`).value = "En Route (call)";
         document
           .getElementById(`teamStatus-${teamID}`)
           .dispatchEvent(new Event("change"));
       }
 
-      function clearCallAndMessage(teamID, message) {
+      function setStatAndMessage(teamID, message, status, releaseCall) {
         const callID = document.getElementById(
           `teamCallNumber-${teamID}`
         ).innerText;
         const notesField = document.getElementById(`callNotes-${callID}`);
-        console.log(notesField);
         notesField.innerText =
           // strip newlines at beginning or end
           `${notesField.innerText}\n${getTime()} -- Team ${
             document.getElementById(`teamNumber-${teamID}`).innerText
-          } states ${message}`;
+          } autostatus: ${message}`;
 
-        document.getElementById(`teamCallNumber-${teamID}`).innerText = "";
-        document
+        // only release the call if we're supposed to
+        if (releaseCall) {
+          document.getElementById(`teamCallNumber-${teamID}`).innerText = "";
+          document
           .getElementById(`teamCallNumber-${teamID}`)
           .dispatchEvent(new Event("focusout"));
+        }
 
-        document.getElementById(`teamStatus-${teamID}`).value = "Posted";
+        document.getElementById(`teamStatus-${teamID}`).value = status;
         document
           .getElementById(`teamStatus-${teamID}`)
           .dispatchEvent(new Event("change"));
@@ -450,10 +450,21 @@
                 <td id="callNumber-${i}">${i}</td>
                 <td contenteditable="true" prevValue="" id="callLocation-${i}"></td>
                 <td contenteditable="true" prevValue="" id="chiefComplaint-${i}"></td>
-                <td contenteditable="true" prevValue="" id="callNotes-${i}"></td>
+                <td><div class="scrollLimitedLarge" contenteditable="true" prevValue="" id="callNotes-${i}"></div></td>
               </tr>`;
 
-          callContainer.insertAdjacentHTML("beforeend", template);
+          callContainer.insertAdjacentHTML("afterbegin", template);
+        }
+      }
+
+      function addCallListRowIfOutOfRoom() {
+        console.log('invoked')
+        const emptyLocationRows = Array.from(document.querySelectorAll('[id^="callLocation-"]')).filter((element) => element.innerHTML.length == 0);
+        const emptyChiefComplaintRows = Array.from(document.querySelectorAll('[id^="chiefComplaint-"]')).filter((element) => element.innerHTML.length == 0);
+
+        if (emptyLocationRows == 0 || emptyChiefComplaintRows == 0) {
+          addCallListRow();
+          registerCallListListeners();
         }
       }
 
@@ -462,6 +473,7 @@
           '[id^="callLocation-"]'
         )) {
           locationField.addEventListener("focusout", (e) => {
+            addCallListRowIfOutOfRoom();
             literalActionAnnotator(
               e.target,
               "Location set to",
@@ -475,6 +487,7 @@
           '[id^="chiefComplaint-"]'
         )) {
           chiefComplaintField.addEventListener("focusout", (e) => {
+            addCallListRowIfOutOfRoom();
             literalActionAnnotator(
               e.target,
               "Complaint set to",
@@ -732,7 +745,7 @@
           // scroll to bottom of all notes fields
           Array.from(document.querySelectorAll('[id^="callNotes-"]')).map((notesField) => notesField.scrollTo(0, notesField.scrollHeight));
         } else {
-          addCallListRow(10);
+          addCallListRow(1);
         }
         registerCallListListeners();
 
