@@ -410,16 +410,8 @@
 
         // on newline, add a time prefix
         for (notesField of document.querySelectorAll('[id^="teamNotes-"]')) {
-          notesField.addEventListener("keyup", (e) => {
-            if (e.keyCode == 13) {
-              appendToNotesField(
-                e.target,
-                `${getTime()}&nbsp--&nbsp`,
-                false,
-                true
-              );
-            }
-          });
+          notesField.removeEventListener("keyup", appendNotePreambleToEventTarget);
+          notesField.addEventListener("keyup", appendNotePreambleToEventTarget);
 
           notesField.addEventListener("focus", (e) => {
             setEndOfContenteditable(e.target);
@@ -555,16 +547,8 @@
         }
 
         for (notesField of document.querySelectorAll('[id^="callNotes-"]')) {
-          notesField.addEventListener("keyup", (e) => {
-            if (e.keyCode == 13) {
-              appendToNotesField(
-                e.target,
-                `${getTime()}&nbsp--&nbsp`,
-                false,
-                true
-              );
-            }
-          });
+          notesField.removeEventListener("keyup", appendNotePreambleToEventTarget);
+          notesField.addEventListener("keyup", appendNotePreambleToEventTarget);
 
           notesField.addEventListener("focus", (e) => {
             setEndOfContenteditable(e.target);
@@ -618,6 +602,17 @@
         }
 
         return false;
+      }
+
+      function appendNotePreambleToEventTarget(e) {
+        if (e.keyCode == 13) {
+          appendToNotesField(
+            e.target,
+            `${getTime()}&nbsp--&nbsp`,
+            false,
+            true
+          );
+        }
       }
 
       function appendToNotesField(
@@ -712,6 +707,7 @@
         let summary = `BEGIN CALL REPORT\n\n`;
 
         for (i = 0; i < callContainer.children.length; i++) {
+          console.log(i)
           const callLocation = document.getElementById(
             `callLocation-${i}`
           ).innerText;
@@ -872,11 +868,11 @@
             const callTable = document.getElementById("callTableBody");
 
             // dunno why we have to call this twice but it thinks the last child is an empty string after we kill a row
-            let lastChild = callTable.lastChild;
-            callTable.removeChild(lastChild);
+            let firstChild = callTable.firstChild;
+            callTable.removeChild(firstChild);
 
-            lastChild = callTable.lastChild;
-            callTable.removeChild(lastChild);
+            firstChild = callTable.firstChild;
+            callTable.removeChild(firstChild);
           });
 
         // register clear button and force download before we do
