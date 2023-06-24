@@ -715,20 +715,20 @@
           const callLocation = document.getElementById(
             `callLocation-${i}`
           ).innerText;
+          const callCC = document.getElementById(
+            `chiefComplaint-${i}`
+          ).innerText;
 
           // only export things with locations so we don't dump an empty list
-          if (callLocation.length > 0) {
-            const callNumber = document.getElementById(
-              `callNumber-${i}`
-            ).innerText;
-            summary += `= = = = Begin Call ${callNumber} = = = =\n`;
+          if (callLocation.length > 0 ||  callCC.length > 0) {
+            summary += `= = = = Begin Call ${i} = = = =\n`;
             // split lines, tab indent each, and recombine
             summary += document
               .getElementById(`callNotes-${i}`)
               .innerText.split("\n")
               .map((line) => `\t${line}`)
               .join("\n");
-            summary += `\n= = = = End Call ${callNumber} = = = =\n\n`;
+            summary += `\n= = = = End Call ${i} = = = =\n\n`;
           }
         }
 
