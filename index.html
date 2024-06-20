@@ -22,12 +22,13 @@
 
         .container {
           display: grid;
-          grid-template-rows: min-content min-content 3fr min-content;
+          grid-template-rows: min-content min-content min-content 3fr min-content;
           gap: 0px 0px;
           grid-auto-flow: row;
           grid-template-areas:
             "title"
             "teams"
+            "equipment"
             "dispatch"
             "footer";
           width: 100%;
@@ -46,6 +47,10 @@
         .dispatch {
           grid-area: dispatch;
           margin-top: 0;
+        }
+
+        .equipment {
+          grid-area: equipment;
         }
 
         .footer {
@@ -167,6 +172,24 @@
           <tbody id="staffTableBody"></tbody>
         </table>
         <hr />
+      </div>
+      <div class="equipment">
+        <h2>Equipment</h2>
+        <span class="buttonContainer">
+          <button id="addEquipmentTableRow">Add Row</button>
+          <button id="delEquipmentTableRow">Del Row</button>
+        </span>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 25%">Equipment Name</th>
+              <th style="width: 25%">Status</th>
+              <th style="width: 50%">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="equipmentTableBody"></tbody>
+        </table>
+        <hr>
       </div>
       <div class="dispatch">
         <h2>Calls</h2>
@@ -507,6 +530,35 @@
         }
       }
 
+      function addEquipmentListRow(count = 1) {
+        const equipmentContainer = document.getElementById("equipmentTableBody");
+        let index = 0;
+        if (equipmentContainer.children.length > 0) {
+          // this is not our first row; pick up indexing
+          index = equipmentContainer.children.length;
+        }
+
+        for (let i = index; i < index + count; i++) {
+          template = `
+              <tr id="equipment-${i}">
+                <td contenteditable="true" prevValue="" id="equipmentName-${i}"></td>
+                <td>
+                  <select id="equipmentState-${i}">
+                    <option value="noEntry">--</option>
+                    <option value="availableClinic">Available (Clinic)</option>
+                    <option value="availableTeam">Available (with Team)</option>
+                    <option value="enRouteToCall">En Route to Call</option>
+                    <option value="inboundToClinic">Inbound to Clinic</option>
+                    <option value="outOfService">Out of Service</option>
+                  </select>
+                  </td>
+                   <td contenteditable="true" prevValue="" id="equipmentNotes-${i}">
+              </tr>`;
+
+              equipmentContainer.insertAdjacentHTML("beforeEnd", template);
+        }
+      }
+
       function addCallListRowIfOutOfRoom() {
         const emptyLocationRows = Array.from(
           document.querySelectorAll('[id^="callLocation-"]')
@@ -518,6 +570,22 @@
         if (emptyLocationRows == 0 || emptyChiefComplaintRows == 0) {
           addCallListRow();
           registerCallListListeners();
+        }
+      }
+
+      function registerEquipmentListListeners() {
+        for (equipmentDropdownField of document.querySelectorAll('[id^="equipmentState-"]')) {
+          equipmentDropdownField.addEventListener("change", (e) => {
+            // remove the prior selected option if it exists
+            Array.from(e.target.children).map((option) => {
+              if (option.value == e.target.value) {
+                option.setAttribute('selected', 'selected');
+              } else {
+                option.removeAttribute('selected');
+              }
+            });
+            e.target.value = e.target.value;
+          });
         }
       }
 
@@ -700,6 +768,10 @@
           "callTableBody",
           document.getElementById("callTableBody").innerHTML
         );
+        localStorage.setItem(
+          "equipmentTableBody",
+          document.getElementById("equipmentTableBody").innerHTML
+        );
 
         localStorage.setItem("venue", document.getElementById("venue").value);
         localStorage.setItem("show", document.getElementById("show").value);
@@ -711,13 +783,12 @@
         let summary = `BEGIN CALL REPORT\n\n`;
 
         for (i = 0; i < callContainer.children.length; i++) {
-          console.log(i)
           const callLocation = document.getElementById(
             `callLocation-${i}`
-          ).innerText;
+          )?.innerText || '';
           const callCC = document.getElementById(
             `chiefComplaint-${i}`
-          ).innerText;
+          )?.innerText || '';
 
           // only export things with locations so we don't dump an empty list
           if (callLocation.length > 0 ||  callCC.length > 0) {
@@ -822,6 +893,15 @@
         }
         registerCallListListeners();
 
+        // fill in equipment tab
+        const equipmentContainer = document.getElementById("equipmentTableBody");
+        if (localStorage.getItem("equipmentTableBody")) {
+          equipmentContainer.innerHTML = localStorage.getItem("equipmentTableBody");
+        } else {
+          addEquipmentListRow(3);
+        }
+        registerEquipmentListListeners();
+
         // fill in venue/show/date if we have it
         if (localStorage.getItem("venue")) {
           document.getElementById("venue").value =
@@ -856,6 +936,12 @@
             registerCallListListeners();
           });
         document
+          .getElementById("addEquipmentTableRow")
+          .addEventListener("click", () => {
+            addEquipmentListRow();
+            registerEquipmentListListeners();
+          });
+        document
           .getElementById("delStaffTableRow")
           .addEventListener("click", () => {
             const staffTable = document.getElementById("staffTableBody");
@@ -878,6 +964,18 @@
             firstChild = callTable.firstChild;
             callTable.removeChild(firstChild);
           });
+          document
+          .getElementById("delEquipmentTableRow")
+          .addEventListener("click", () => {
+            const equipmentTable = document.getElementById("equipmentTableBody");
+
+            // dunno why we have to call this twice but it thinks the last child is an empty string after we kill a row
+            let lastChild = equipmentTable.lastChild;
+            equipmentTable.removeChild(lastChild);
+
+            lastChild = equipmentTable.lastChild;
+            equipmentTable.removeChild(lastChild);
+          });
 
         // register clear button and force download before we do
         document.getElementById("clearPage").addEventListener("click", () => {
@@ -885,6 +983,7 @@
 
           localStorage.setItem("staffTableBody", "");
           localStorage.setItem("callTableBody", "");
+          localStorage.setItem("equipmentTableBody", "");
 
           localStorage.setItem("venue", "");
           localStorage.setItem("show", "");
