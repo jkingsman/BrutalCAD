@@ -233,7 +233,8 @@
                 <td contenteditable="true" prevValue="" id="teamNumber-${i}"></td>
                 <td contenteditable="true" prevValue="" id="postLocation-${i}"></td>
                 <td>
-                  <select name="teamStatus" id="teamStatus-${i}" style="background-color: #ababab;">
+                  <select name="teamStatus" id="teamStatus-${i}">
+                    <option value="--" style="background-color: #fff;">--</option>
                     <option value="Out of service (clinic)" style="background-color: #ababab;">Out of service (clinic)</option>
                     <option value="Out of service (break)" style="background-color: #ababab;">Out of service (break)</option>
                     <option value="Posted" style="background-color: #7cffa4;">Posted</option>
@@ -279,6 +280,7 @@
         }`;
 
         const statusColors = {
+          "--": "#fff",
           "Out of service (clinic)": "#ababab",
           "Out of service (break)": "#ababab",
           Posted: "#7cffa4",
