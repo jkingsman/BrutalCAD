@@ -113,6 +113,10 @@
           outline: 2px solid red;
         }
 
+        .emphasizeRowGentle {
+          background: aquamarine !important;
+        }
+
         .hideToggle {
           float: right;
         }
@@ -256,6 +260,7 @@
                   <button title="En route to clinic" onClick="setStatAndMessage(${i}, 'En route to clinic', 'Clinic Incoming', false)">To Clinic</button>
                   <button title="Patient dropped off" onClick="setStatAndMessage(${i}, 'Pt dropped off', 'Out of service (clinic)', false)">Drop Off</button>
                   <button title="Detach from current call and mark as posted" onClick="setStatAndMessage(${i}, 'Detached', 'Posted', true)">Detach + Post</button>
+                  <button title="Highlight row" onClick="toggleHighlight(${i})">🖍️</button>
                 </td>
               </tr>`;
 
@@ -463,6 +468,11 @@
             .getElementById(`call-${callNumber}`)
             .classList.remove("emphasizeRow");
         }
+      }
+
+      function toggleHighlight(teamID) {
+        const teamRow = document.getElementById(`team-${teamID}`);
+        teamRow.classList.toggle("emphasizeRowGentle");
       }
 
       // find the last empty location, go one less, and assign the given team to that call + mark them en route
